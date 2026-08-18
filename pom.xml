@@ -30,6 +30,7 @@
     <modules>
         <module>shared</module>
         <module>services/auth-service</module>
+        <module>services/catalog-service</module>
     </modules>
 
     <dependencyManagement>
