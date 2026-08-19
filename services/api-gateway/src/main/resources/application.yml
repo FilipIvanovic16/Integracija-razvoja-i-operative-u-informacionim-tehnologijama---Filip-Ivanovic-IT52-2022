@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cloud:
+    gateway:
+      # CORS se resava OVDE - centralno na gateway-u - a ne vise pojedinacno po
+      # servisu (svaki servis i dalje ima sopstvenu CORS konfiguraciju za slucaj
+      # direktnog pristupa mimo gateway-a u lokalnom razvoju).
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "${app.cors.allowed-origins:http://localhost:5173}"
+            allowedMethods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter.replenishRate: 20
+            redis-rate-limiter.burstCapacity: 40
+            redis-rate-limiter.requestedTokens: 1
+      routes:
+        - id: auth-service-auth
+          uri: ${app.services.auth-service.url:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+
+        # Specificnija ruta MORA ici pre opste /api/account/** rute ispod nje -
+        # Gateway uzima prvu rutu ciji predikat odgovara.
+        - id: order-service-wishlist
+          uri: ${app.services.order-service.url:http://localhost:8083}
+          predicates:
+            - Path=/api/account/wishlist/**
+        - id: auth-service-account
+          uri: ${app.services.auth-service.url:http://localhost:8081}
+          predicates:
+            - Path=/api/account/**
+
+        - id: catalog-service-admin-uploads
+          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          predicates:
+            - Path=/api/admin/uploads/**
+        - id: catalog-service-uploads
+          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          predicates:
+            - Path=/api/uploads/**
+        - id: catalog-service-catalog
+          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          predicates:
+            - Path=/api/watches/**,/api/brands/**,/api/categories/**
+
+        - id: order-service-admin
+          uri: ${app.services.order-service.url:http://localhost:8083}
+          predicates:
+            - Path=/api/admin/orders/**
+        - id: order-service-orders
+          uri: ${app.services.order-service.url:http://localhost:8083}
+          predicates:
+            - Path=/api/orders/**
+
+        - id: payment-service-admin
+          uri: ${app.services.payment-service.url:http://localhost:8084}
+          predicates:
+            - Path=/api/admin/payments/**
+        - id: payment-service-payments
+          uri: ${app.services.payment-service.url:http://localhost:8084}
+          predicates:
+            - Path=/api/payments/**
+
+server:
+  port: 8080
+
+# Isti JWT tajni kljuc kao auth-service (koji tokene izdaje) - gateway ovde tokene
+# samo verifikuje, ne izdaje ih.
+app:
+  jwt:
+    secret: ${JWT_SECRET:Z2VuZXJpc2FuLXRham5pLWtsanVjLXphLWNocm9ub3Nob3AtMjAyNi1lb25pcw==}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
