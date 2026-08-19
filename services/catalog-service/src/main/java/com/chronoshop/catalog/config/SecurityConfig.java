@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/watches/**", "/api/brands/**", "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/watches/*/stock").hasAnyRole("ADMIN", "SERVICE")
                         .requestMatchers(HttpMethod.POST, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")

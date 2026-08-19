@@ -30,6 +30,14 @@ public class AddressService {
                 .map(EntityMapper::toAddressResponse).toList();
     }
 
+    /** Koristi order-service preko REST poziva pri razresavanju adrese isporuke. */
+    @Transactional(readOnly = true)
+    public AddressResponse getForUser(Long userId, Long addressId) {
+        Address a = addressRepository.findByIdAndUserId(addressId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Adresa", addressId));
+        return EntityMapper.toAddressResponse(a);
+    }
+
     @Transactional
     public AddressResponse create(Long userId, AddressRequest req) {
         User user = userRepository.findById(userId)

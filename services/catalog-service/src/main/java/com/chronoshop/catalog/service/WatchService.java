@@ -15,6 +15,7 @@ import com.chronoshop.dto.PageResponse;
 import com.chronoshop.dto.WatchDtos.WatchRequest;
 import com.chronoshop.dto.WatchDtos.WatchResponse;
 import com.chronoshop.exception.DuplicateResourceException;
+import com.chronoshop.exception.InsufficientStockException;
 import com.chronoshop.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,6 +60,23 @@ public class WatchService {
     public Watch findEntity(Long id) {
         return watchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sat", id));
+    }
+
+    /**
+     * Interna rezervacija/oslobadjanje zaliha - zove je order-service preko REST-a pri
+     * kreiranju/otkazivanju porudzbine (delta &lt; 0 umanjuje, delta &gt; 0 vraca stanje).
+     * Ovo je REST varijanta CheckStock/ReserveStock ugovora; zamenice je gRPC poziv
+     * (feat/grpc-stock-check), a ova putanja ostace kao fallback.
+     */
+    @Transactional
+    public WatchResponse adjustStock(Long id, int delta) {
+        Watch w = findEntity(id);
+        int newQuantity = w.getStockQuantity() + delta;
+        if (newQuantity < 0) {
+            throw new InsufficientStockException(w.getName(), -delta, w.getStockQuantity());
+        }
+        w.setStockQuantity(newQuantity);
+        return EntityMapper.toWatchResponse(watchRepository.save(w));
     }
 
     @Transactional

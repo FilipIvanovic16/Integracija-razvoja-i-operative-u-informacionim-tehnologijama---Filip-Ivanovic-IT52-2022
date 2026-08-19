@@ -5,6 +5,7 @@ import com.chronoshop.domain.enums.Documentation;
 import com.chronoshop.domain.enums.Gender;
 import com.chronoshop.domain.enums.MovementType;
 import com.chronoshop.domain.enums.WatchCondition;
+import com.chronoshop.dto.CatalogDtos.StockAdjustmentRequest;
 import com.chronoshop.dto.PageResponse;
 import com.chronoshop.dto.WatchDtos.WatchRequest;
 import com.chronoshop.dto.WatchDtos.WatchResponse;
@@ -71,5 +72,10 @@ public class WatchController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         watchService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/stock")
+    public WatchResponse adjustStock(@PathVariable Long id, @Valid @RequestBody StockAdjustmentRequest request) {
+        return watchService.adjustStock(id, request.delta());
     }
 }
