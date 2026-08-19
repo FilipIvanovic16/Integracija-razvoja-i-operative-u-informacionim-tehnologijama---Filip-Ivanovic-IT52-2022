@@ -1,6 +1,7 @@
 package com.chronoshop.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public final class CatalogDtos {
@@ -35,6 +36,17 @@ public final class CatalogDtos {
             Long id,
             String name,
             String description
+    ) {
+    }
+
+    /**
+     * Interni zahtev order-service -> catalog-service za rezervaciju/oslobadjanje zaliha.
+     * Negativan delta umanjuje stanje (rezervacija pri kreiranju porudzbine), pozitivan
+     * ga vraca (otkazana porudzbina). Zamenice se gRPC ReserveStock pozivom (vidi PR
+     * feat/grpc-stock-check), ova REST putanja ostaje kao fallback.
+     */
+    public record StockAdjustmentRequest(
+            @NotNull Integer delta
     ) {
     }
 }

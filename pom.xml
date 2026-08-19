@@ -31,6 +31,7 @@
         <module>shared</module>
         <module>services/auth-service</module>
         <module>services/catalog-service</module>
+        <module>services/order-service</module>
     </modules>
 
     <dependencyManagement>

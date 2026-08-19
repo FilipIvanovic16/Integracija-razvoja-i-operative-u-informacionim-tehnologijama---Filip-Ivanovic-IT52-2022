@@ -1,10 +1,9 @@
-package com.chronoshop.catalog.config;
+package com.chronoshop.order.config;
 
-import com.chronoshop.catalog.security.GatewayHeaderAuthenticationFilter;
-import com.chronoshop.catalog.security.RestAuthEntryPoint;
+import com.chronoshop.order.security.GatewayHeaderAuthenticationFilter;
+import com.chronoshop.order.security.RestAuthEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -33,12 +32,6 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(authEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/watches/**", "/api/brands/**", "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/watches/*/stock").hasAnyRole("ADMIN", "SERVICE")
-                        .requestMatchers(HttpMethod.POST, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/watches/**", "/api/brands/**", "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
