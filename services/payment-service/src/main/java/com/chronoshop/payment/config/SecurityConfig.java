@@ -1,10 +1,9 @@
-package com.chronoshop.order.config;
+package com.chronoshop.payment.config;
 
-import com.chronoshop.order.security.GatewayHeaderAuthenticationFilter;
-import com.chronoshop.order.security.RestAuthEntryPoint;
+import com.chronoshop.payment.security.GatewayHeaderAuthenticationFilter;
+import com.chronoshop.payment.security.RestAuthEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -33,10 +32,9 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(authEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus").permitAll()
-                        // payment-service azurira status porudzbine posle Stripe webhook-a (bez
-                        // konteksta ulogovanog korisnika), pa se samo-oznacava kao SERVICE.
-                        .requestMatchers(HttpMethod.PUT, "/api/admin/orders/*/status").hasAnyRole("ADMIN", "SERVICE")
-                        .requestMatchers(HttpMethod.GET, "/api/admin/orders/**").hasAnyRole("ADMIN", "SERVICE")
+                        // Stripe zove webhook spolja, bez ikakvog zaglavlja identiteta -
+                        // potpis se kriptografski verifikuje u PaymentService, ne ovde.
+                        .requestMatchers("/api/payments/webhook").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
