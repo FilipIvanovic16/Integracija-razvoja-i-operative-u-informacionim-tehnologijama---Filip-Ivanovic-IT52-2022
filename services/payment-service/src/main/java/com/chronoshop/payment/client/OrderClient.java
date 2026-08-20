@@ -1,8 +1,6 @@
 package com.chronoshop.payment.client;
 
-import com.chronoshop.domain.enums.OrderStatus;
 import com.chronoshop.dto.OrderDtos.OrderResponse;
-import com.chronoshop.dto.OrderDtos.UpdateOrderStatusRequest;
 import com.chronoshop.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,9 +8,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 /**
- * REST klijent ka order-service. Zameniće ga (za tok narudžbina -> naplata) RabbitMQ
- * događaji order.created / payment.completed / payment.failed (feat/rabbitmq-events);
- * dok ta grana ne postoji, plaćanje se inicira i status ažurira sinhrono preko REST-a.
+ * REST klijent ka order-service - i dalje jedini nacin da payment-service sinhrono
+ * pročita porudžbinu (vlasništvo/iznos) pri pokretanju checkout-a. Javljanje novog
+ * statusa nazad order-service-u vise ne ide ovim putem - to je RabbitMQ (vidi
+ * PaymentEventPublisher), po specifikaciji.
  */
 @Component
 public class OrderClient {
@@ -42,19 +41,5 @@ public class OrderClient {
             }
             throw e;
         }
-    }
-
-    /**
-     * Azuriranje statusa posle Stripe webhook-a - nema kontekst ulogovanog korisnika
-     * (poziva ga Stripe), pa se poziv samo-oznacava kao SERVICE.
-     */
-    public void updateOrderStatus(Long orderId, OrderStatus status) {
-        restClient.put()
-                .uri("/api/admin/orders/{id}/status", orderId)
-                .header("X-User-Id", "payment-service")
-                .header("X-User-Roles", "SERVICE")
-                .body(new UpdateOrderStatusRequest(status))
-                .retrieve()
-                .toBodilessEntity();
     }
 }
