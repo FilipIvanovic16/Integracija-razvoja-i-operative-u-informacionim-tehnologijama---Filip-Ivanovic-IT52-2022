@@ -8,6 +8,7 @@ import com.chronoshop.dto.OrderDtos.CreateOrderRequest;
 import com.chronoshop.dto.OrderDtos.OrderItemRequest;
 import com.chronoshop.dto.OrderDtos.OrderResponse;
 import com.chronoshop.dto.PageResponse;
+import com.chronoshop.event.OrderCreatedEvent;
 import com.chronoshop.exception.BadRequestException;
 import com.chronoshop.exception.InsufficientStockException;
 import com.chronoshop.exception.ResourceNotFoundException;
@@ -15,6 +16,7 @@ import com.chronoshop.order.client.AuthClient;
 import com.chronoshop.order.client.CatalogClient;
 import com.chronoshop.order.domain.Order;
 import com.chronoshop.order.domain.OrderItem;
+import com.chronoshop.order.event.OrderEventPublisher;
 import com.chronoshop.order.mapper.EntityMapper;
 import com.chronoshop.order.repository.OrderRepository;
 import org.springframework.data.domain.Page;
@@ -34,11 +36,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final AuthClient authClient;
     private final CatalogClient catalogClient;
+    private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, AuthClient authClient, CatalogClient catalogClient) {
+    public OrderService(OrderRepository orderRepository, AuthClient authClient, CatalogClient catalogClient,
+                        OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.authClient = authClient;
         this.catalogClient = catalogClient;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @Transactional
@@ -81,7 +86,13 @@ public class OrderService {
         }
 
         order.recalculateTotal();
-        return EntityMapper.toOrderResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+
+        orderEventPublisher.publishOrderCreated(OrderCreatedEvent.of(
+                saved.getId(), saved.getOrderNumber(), saved.getCustomerEmail(),
+                saved.getCustomerName(), saved.getTotalAmount(), "EUR"));
+
+        return EntityMapper.toOrderResponse(saved);
     }
 
     @Transactional(readOnly = true)
