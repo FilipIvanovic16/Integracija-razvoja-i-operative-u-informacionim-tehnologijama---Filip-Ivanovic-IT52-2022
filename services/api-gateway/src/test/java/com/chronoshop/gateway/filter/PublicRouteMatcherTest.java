@@ -39,4 +39,9 @@ class PublicRouteMatcherTest {
     void actuatorIsPublic() {
         assertThat(matcher.isPublic("/actuator/health", HttpMethod.GET)).isTrue();
     }
+
+    @Test
+    void notificationStreamIsPublic() {
+        assertThat(matcher.isPublic("/api/notifications/stream", HttpMethod.GET)).isTrue();
+    }
 }

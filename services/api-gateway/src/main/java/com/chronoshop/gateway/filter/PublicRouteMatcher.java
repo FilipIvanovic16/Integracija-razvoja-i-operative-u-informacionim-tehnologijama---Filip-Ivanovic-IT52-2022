@@ -20,6 +20,10 @@ public class PublicRouteMatcher {
         if (path.equals("/api/payments/webhook")) {
             return true;
         }
+        if (path.startsWith("/api/notifications/")) {
+            // SSE broadcast tok, isti za sve klijente - nema po-korisnicki sadrzaj.
+            return true;
+        }
         if (path.startsWith("/actuator/")) {
             return true;
         }
