@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package chronoshop.stock;
+
+option java_multiple_files = true;
+option java_package = "com.chronoshop.grpc.stock";
+option java_outer_classname = "StockProto";
+
+// order-service -> catalog-service, provera i rezervacija zaliha pre kreiranja
+// porudzbine. Poslovni ishodi (nije pronadjen, neaktivan, nedovoljno na stanju)
+// se namerno vracaju u samom odgovoru (found/active/available/success), ne kao
+// gRPC status kodovi - StatusRuntimeException se koristi iskljucivo za stvarnu
+// nedostupnost servisa (UNAVAILABLE/DEADLINE_EXCEEDED), sto je jedini slucaj kada
+// order-service-ov klijent prelazi na REST fallback (StockClient).
+service StockService {
+  rpc CheckStock (StockCheckRequest) returns (StockCheckResponse);
+  rpc ReserveStock (StockReserveRequest) returns (StockReserveResponse);
+}
+
+message StockCheckRequest {
+  int64 watch_id = 1;
+  int32 requested_quantity = 2;
+}
+
+message StockCheckResponse {
+  bool found = 1;
+  bool active = 2;
+  bool available = 3;
+  int32 current_stock = 4;
+  string watch_name = 5;
+  string reference_number = 6;
+  // Decimalni string (BigDecimal), ne double - cena se ne zaokruzuje binarno.
+  string price = 7;
+}
+
+message StockReserveRequest {
+  int64 watch_id = 1;
+  // Negativno umanjuje zalihe (rezervacija pri kreiranju porudzbine),
+  // pozitivno ih vraca (otkazana porudzbina).
+  int32 delta = 2;
+}
+
+message StockReserveResponse {
+  bool success = 1;
+  int32 new_stock = 2;
+  string message = 3;
+}
