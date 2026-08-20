@@ -5,8 +5,11 @@ import com.chronoshop.dto.OrderDtos.OrderResponse;
 import com.chronoshop.exception.BadRequestException;
 import com.chronoshop.payment.client.OrderClient;
 import com.chronoshop.payment.domain.Payment;
+import com.chronoshop.payment.event.PaymentEventPublisher;
 import com.chronoshop.payment.repository.PaymentRepository;
 import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 import org.junit.jupiter.api.Test;
@@ -35,9 +38,10 @@ class PaymentServiceTest {
 
     private final OrderClient orderClient = mock(OrderClient.class);
     private final PaymentRepository paymentRepository = mock(PaymentRepository.class);
+    private final PaymentEventPublisher paymentEventPublisher = mock(PaymentEventPublisher.class);
 
     private final PaymentService paymentService = new PaymentService(
-            orderClient, paymentRepository, "whsec_test", "sk_test_dummy");
+            orderClient, paymentRepository, paymentEventPublisher, "whsec_test", "sk_test_dummy");
 
     private static final OrderResponse PENDING_ORDER = new OrderResponse(
             42L, "ORD-20260818-ABCDEF", OrderStatus.PENDING, new BigDecimal("12000.00"),
@@ -82,6 +86,39 @@ class PaymentServiceTest {
             mocked.verifyNoInteractions();
         }
         verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void handleWebhook_publishesPaymentCompletedEvent_onSucceededPaymentIntent() {
+        PaymentIntent fakeIntent = mock(PaymentIntent.class);
+        when(fakeIntent.getId()).thenReturn("pi_123");
+
+        EventDataObjectDeserializer deserializer = mock(EventDataObjectDeserializer.class);
+        when(deserializer.getObject()).thenReturn(java.util.Optional.of(fakeIntent));
+
+        Event stripeEvent = mock(Event.class);
+        when(stripeEvent.getType()).thenReturn("payment_intent.succeeded");
+        when(stripeEvent.getId()).thenReturn("evt_1");
+        when(stripeEvent.getDataObjectDeserializer()).thenReturn(deserializer);
+
+        Payment existing = new Payment();
+        existing.setOrderId(42L);
+        existing.setOrderNumber("ORD-1");
+        existing.setStripePaymentIntentId("pi_123");
+        existing.setAmount(new BigDecimal("100.00"));
+        existing.setCurrency("EUR");
+        when(paymentRepository.findByStripePaymentIntentId("pi_123")).thenReturn(Optional.of(existing));
+
+        try (MockedStatic<Webhook> mocked = Mockito.mockStatic(Webhook.class)) {
+            mocked.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString())).thenReturn(stripeEvent);
+
+            paymentService.handleWebhook("{}", "valid-sig");
+        }
+
+        verify(paymentEventPublisher).publishCompleted(argThat(e ->
+                e.orderId().equals(42L) && e.orderNumber().equals("ORD-1")));
+        verify(paymentEventPublisher, never()).publishFailed(any());
+        assertThat(existing.getPaidAt()).isNotNull();
     }
 
     @Test

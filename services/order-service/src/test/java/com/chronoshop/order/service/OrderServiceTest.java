@@ -11,6 +11,7 @@ import com.chronoshop.exception.InsufficientStockException;
 import com.chronoshop.order.client.AuthClient;
 import com.chronoshop.order.client.CatalogClient;
 import com.chronoshop.order.domain.Order;
+import com.chronoshop.order.event.OrderEventPublisher;
 import com.chronoshop.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,8 @@ class OrderServiceTest {
     private AuthClient authClient;
     @Mock
     private CatalogClient catalogClient;
+    @Mock
+    private OrderEventPublisher orderEventPublisher;
 
     @InjectMocks
     private OrderService orderService;
@@ -90,6 +93,7 @@ class OrderServiceTest {
         var response = orderService.createOrder(1L, req);
 
         verify(catalogClient).adjustStock(10L, -2);
+        verify(orderEventPublisher).publishOrderCreated(any());
         assertThat(response.items()).hasSize(1);
         assertThat(response.totalAmount()).isEqualByComparingTo("24000.00");
         assertThat(response.status()).isEqualTo(OrderStatus.PENDING);
