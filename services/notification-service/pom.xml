@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.chronoshop</groupId>
+        <artifactId>chronoshop-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>notification-service</artifactId>
+    <packaging>jar</packaging>
+    <name>notification-service</name>
+    <description>ChronoShop - notification servis (WebFlux/Reactor + RxJava3, SSE, bez baze)</description>
+
+    <dependencies>
+        <!--
+            "shared" povlaci spring-boot-starter-web i spring-boot-starter-security
+            (servlet stek) koji se ne sme naci na classpath-u pored WebFlux-a - isti
+            razlog kao u api-gateway/pom.xml. Ovde ih iskljucujemo, a i dalje dobijamo
+            event record klase (OrderCreatedEvent i sl.) koje su nam jedino potrebne.
+        -->
+        <dependency>
+            <groupId>com.chronoshop</groupId>
+            <artifactId>shared</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-security</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+            RxJava 3 operatorski sloj nad Reactor Flux tokom (Sinks.Many -> Flux -> Flowable).
+            reactor-bom (uvezen transitivno preko spring-boot-starter-webflux) ne
+            upravlja verzijom ovog artefakta, pa je navodimo eksplicitno; rxjava3
+            dolazi tranzitivno preko reactor-adapter-a.
+        -->
+        <dependency>
+            <groupId>io.projectreactor.addons</groupId>
+            <artifactId>reactor-adapter</artifactId>
+            <version>3.5.1</version>
+        </dependency>
+        <!-- reactor-adapter oznacava rxjava3 kao optional (podrzava i RxJava2) - navodimo eksplicitno -->
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>3.1.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
