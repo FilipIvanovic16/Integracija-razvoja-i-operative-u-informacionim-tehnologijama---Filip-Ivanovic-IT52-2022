@@ -6,9 +6,12 @@ import com.chronoshop.dto.OrderDtos.OrderResponse;
 import com.chronoshop.dto.PageResponse;
 import com.chronoshop.dto.PaymentDtos.CheckoutSessionResponse;
 import com.chronoshop.dto.PaymentDtos.PaymentResponse;
+import com.chronoshop.event.PaymentCompletedEvent;
+import com.chronoshop.event.PaymentFailedEvent;
 import com.chronoshop.exception.BadRequestException;
 import com.chronoshop.payment.client.OrderClient;
 import com.chronoshop.payment.domain.Payment;
+import com.chronoshop.payment.event.PaymentEventPublisher;
 import com.chronoshop.payment.mapper.EntityMapper;
 import com.chronoshop.payment.repository.PaymentRepository;
 import com.stripe.exception.SignatureVerificationException;
@@ -33,8 +36,8 @@ import java.util.Optional;
  * Integracija sa Stripe payment procesorom (test mode).
  * - kreira PaymentIntent i vraća client secret frontendu (posle REST provere porudžbine
  *   kod order-service, umesto lokalnog JPA učitavanja kao u monolitu);
- * - obrađuje webhook događaje uz verifikaciju potpisa i idempotentnost, i javlja
- *   order-service-u novi status porudžbine (REST danas, RabbitMQ od feat/rabbitmq-events).
+ * - obrađuje webhook događaje uz verifikaciju potpisa i idempotentnost, i javlja novi
+ *   status porudžbine asinhrono preko RabbitMQ (payment.completed/payment.failed).
  */
 @Service
 public class PaymentService {
@@ -44,15 +47,18 @@ public class PaymentService {
 
     private final OrderClient orderClient;
     private final PaymentRepository paymentRepository;
+    private final PaymentEventPublisher paymentEventPublisher;
     private final String webhookSecret;
     private final String publishableHint;
 
     public PaymentService(OrderClient orderClient,
                           PaymentRepository paymentRepository,
+                          PaymentEventPublisher paymentEventPublisher,
                           @Value("${stripe.webhook.secret}") String webhookSecret,
                           @Value("${stripe.api.secret-key}") String secretKey) {
         this.orderClient = orderClient;
         this.paymentRepository = paymentRepository;
+        this.paymentEventPublisher = paymentEventPublisher;
         this.webhookSecret = webhookSecret;
         this.publishableHint = secretKey != null && secretKey.startsWith("sk_test") ? "test_mode" : "live_mode";
     }
@@ -160,11 +166,18 @@ public class PaymentService {
             payment.setCustomerEmail(intent.getReceiptEmail());
         }
 
+        // Umesto REST poziva ka order-service (feat/payment-service), status se sada
+        // javlja asinhrono preko RabbitMQ - i notification-service (feat/reactive-
+        // notifications) ce se pretplatiti na iste dogadjaje. FAILED i CANCELLED oba
+        // mapiraju na payment.failed jer shared ima samo Completed/Failed event tipove.
         if (newStatus == PaymentStatus.SUCCEEDED) {
             payment.setPaidAt(LocalDateTime.now());
-            orderClient.updateOrderStatus(payment.getOrderId(), OrderStatus.PAID);
-        } else if (newStatus == PaymentStatus.CANCELLED) {
-            orderClient.updateOrderStatus(payment.getOrderId(), OrderStatus.CANCELLED);
+            paymentEventPublisher.publishCompleted(PaymentCompletedEvent.of(
+                    payment.getOrderId(), payment.getOrderNumber(), payment.getStripePaymentIntentId(),
+                    payment.getAmount(), payment.getCurrency()));
+        } else if (newStatus == PaymentStatus.FAILED || newStatus == PaymentStatus.CANCELLED) {
+            paymentEventPublisher.publishFailed(PaymentFailedEvent.of(
+                    payment.getOrderId(), payment.getOrderNumber(), "Stripe status: " + newStatus));
         }
 
         paymentRepository.save(payment);
