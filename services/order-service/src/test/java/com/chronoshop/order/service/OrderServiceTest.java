@@ -5,11 +5,11 @@ import com.chronoshop.domain.enums.Role;
 import com.chronoshop.dto.OrderDtos.CreateOrderRequest;
 import com.chronoshop.dto.OrderDtos.OrderItemRequest;
 import com.chronoshop.dto.UserDtos.UserResponse;
-import com.chronoshop.dto.WatchDtos.WatchResponse;
 import com.chronoshop.exception.BadRequestException;
 import com.chronoshop.exception.InsufficientStockException;
 import com.chronoshop.order.client.AuthClient;
-import com.chronoshop.order.client.CatalogClient;
+import com.chronoshop.order.client.StockClient;
+import com.chronoshop.order.client.WatchStockInfo;
 import com.chronoshop.order.domain.Order;
 import com.chronoshop.order.event.OrderEventPublisher;
 import com.chronoshop.order.repository.OrderRepository;
@@ -38,7 +38,7 @@ class OrderServiceTest {
     @Mock
     private AuthClient authClient;
     @Mock
-    private CatalogClient catalogClient;
+    private StockClient stockClient;
     @Mock
     private OrderEventPublisher orderEventPublisher;
 
@@ -51,7 +51,7 @@ class OrderServiceTest {
     @Test
     void createOrder_throwsInsufficientStock_whenRequestedExceedsAvailable() {
         when(authClient.getUser(1L)).thenReturn(CUSTOMER);
-        when(catalogClient.getWatch(10L)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 2, true));
+        when(stockClient.checkStock(10L, 5)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 2, true));
 
         CreateOrderRequest req = new CreateOrderRequest(
                 List.of(new OrderItemRequest(10L, 5)),
@@ -61,14 +61,14 @@ class OrderServiceTest {
                 .isInstanceOf(InsufficientStockException.class)
                 .hasMessageContaining("Submariner");
 
-        verify(catalogClient, never()).adjustStock(anyLong(), anyInt());
+        verify(stockClient, never()).reserveStock(anyLong(), anyInt());
         verify(orderRepository, never()).save(any());
     }
 
     @Test
     void createOrder_throwsBadRequest_whenWatchInactive() {
         when(authClient.getUser(1L)).thenReturn(CUSTOMER);
-        when(catalogClient.getWatch(10L)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 5, false));
+        when(stockClient.checkStock(10L, 1)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 5, false));
 
         CreateOrderRequest req = new CreateOrderRequest(
                 List.of(new OrderItemRequest(10L, 1)),
@@ -77,13 +77,13 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.createOrder(1L, req))
                 .isInstanceOf(BadRequestException.class);
 
-        verify(catalogClient, never()).adjustStock(anyLong(), anyInt());
+        verify(stockClient, never()).reserveStock(anyLong(), anyInt());
     }
 
     @Test
     void createOrder_reservesStockAndSavesOrder_whenStockSufficient() {
         when(authClient.getUser(1L)).thenReturn(CUSTOMER);
-        when(catalogClient.getWatch(10L)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 5, true));
+        when(stockClient.checkStock(10L, 2)).thenReturn(watch(10L, "Submariner", "SUB-1", "12000.00", 5, true));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CreateOrderRequest req = new CreateOrderRequest(
@@ -92,7 +92,7 @@ class OrderServiceTest {
 
         var response = orderService.createOrder(1L, req);
 
-        verify(catalogClient).adjustStock(10L, -2);
+        verify(stockClient).reserveStock(10L, -2);
         verify(orderEventPublisher).publishOrderCreated(any());
         assertThat(response.items()).hasSize(1);
         assertThat(response.totalAmount()).isEqualByComparingTo("24000.00");
@@ -123,11 +123,10 @@ class OrderServiceTest {
 
         orderService.updateStatus(5L, OrderStatus.CANCELLED);
 
-        verify(catalogClient).adjustStock(10L, 2);
+        verify(stockClient).reserveStock(10L, 2);
     }
 
-    private WatchResponse watch(Long id, String name, String ref, String price, int stock, boolean active) {
-        return new WatchResponse(id, name, ref, null, null, null, new BigDecimal(price), stock,
-                stock > 0, null, null, null, null, null, List.of(), active, null, null, null);
+    private WatchStockInfo watch(Long id, String name, String ref, String price, int stock, boolean active) {
+        return new WatchStockInfo(id, name, ref, new BigDecimal(price), stock, active);
     }
 }

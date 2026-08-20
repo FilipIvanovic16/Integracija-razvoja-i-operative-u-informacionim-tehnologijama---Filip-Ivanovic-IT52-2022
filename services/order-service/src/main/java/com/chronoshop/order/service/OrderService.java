@@ -2,7 +2,6 @@ package com.chronoshop.order.service;
 
 import com.chronoshop.dto.UserDtos.AddressResponse;
 import com.chronoshop.dto.UserDtos.UserResponse;
-import com.chronoshop.dto.WatchDtos.WatchResponse;
 import com.chronoshop.domain.enums.OrderStatus;
 import com.chronoshop.dto.OrderDtos.CreateOrderRequest;
 import com.chronoshop.dto.OrderDtos.OrderItemRequest;
@@ -13,7 +12,8 @@ import com.chronoshop.exception.BadRequestException;
 import com.chronoshop.exception.InsufficientStockException;
 import com.chronoshop.exception.ResourceNotFoundException;
 import com.chronoshop.order.client.AuthClient;
-import com.chronoshop.order.client.CatalogClient;
+import com.chronoshop.order.client.StockClient;
+import com.chronoshop.order.client.WatchStockInfo;
 import com.chronoshop.order.domain.Order;
 import com.chronoshop.order.domain.OrderItem;
 import com.chronoshop.order.event.OrderEventPublisher;
@@ -35,14 +35,14 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final AuthClient authClient;
-    private final CatalogClient catalogClient;
+    private final StockClient stockClient;
     private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, AuthClient authClient, CatalogClient catalogClient,
+    public OrderService(OrderRepository orderRepository, AuthClient authClient, StockClient stockClient,
                         OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.authClient = authClient;
-        this.catalogClient = catalogClient;
+        this.stockClient = stockClient;
         this.orderEventPublisher = orderEventPublisher;
     }
 
@@ -61,13 +61,14 @@ public class OrderService {
         order.setStatus(OrderStatus.PENDING);
         applyShipping(order, userId, req);
 
-        // Prvo proveravamo dostupnost SVIH stavki, tek onda rezervišemo zalihe za svaku -
+        // Prvo proveravamo dostupnost SVIH stavki (gRPC CheckStock, REST fallback pri
+        // nedostupnosti), tek onda rezervišemo zalihe za svaku (gRPC ReserveStock) -
         // smanjuje (ali ne eliminiše, bez sage/kompenzacije) prozor za nekonzistentnost
-        // između order-service i catalog-service dok su to dva REST poziva umesto jedne
-        // lokalne transakcije kao u monolitu.
-        List<WatchResponse> watches = new ArrayList<>();
+        // između order-service i catalog-service dok su to dva odvojena poziva umesto
+        // jedne lokalne transakcije kao u monolitu.
+        List<WatchStockInfo> watches = new ArrayList<>();
         for (OrderItemRequest itemReq : req.items()) {
-            WatchResponse watch = catalogClient.getWatch(itemReq.watchId());
+            WatchStockInfo watch = stockClient.checkStock(itemReq.watchId(), itemReq.quantity());
             if (!watch.active()) {
                 throw new BadRequestException("Sat '" + watch.name() + "' trenutno nije dostupan za prodaju.");
             }
@@ -79,9 +80,9 @@ public class OrderService {
 
         for (int i = 0; i < req.items().size(); i++) {
             OrderItemRequest itemReq = req.items().get(i);
-            WatchResponse watch = watches.get(i);
-            catalogClient.adjustStock(watch.id(), -itemReq.quantity());
-            order.addItem(new OrderItem(watch.id(), watch.name(), watch.referenceNumber(),
+            WatchStockInfo watch = watches.get(i);
+            stockClient.reserveStock(watch.watchId(), -itemReq.quantity());
+            order.addItem(new OrderItem(watch.watchId(), watch.name(), watch.referenceNumber(),
                     itemReq.quantity(), watch.price()));
         }
 
@@ -125,7 +126,7 @@ public class OrderService {
         // Otkazivanje vraća rezervisane zalihe nazad u catalog-service
         if (newStatus == OrderStatus.CANCELLED && old != OrderStatus.CANCELLED) {
             for (OrderItem item : order.getItems()) {
-                catalogClient.adjustStock(item.getWatchId(), item.getQuantity());
+                stockClient.reserveStock(item.getWatchId(), item.getQuantity());
             }
         }
         order.setStatus(newStatus);
