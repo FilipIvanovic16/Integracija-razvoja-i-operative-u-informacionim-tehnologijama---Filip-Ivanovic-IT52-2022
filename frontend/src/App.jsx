@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { WishlistProvider } from './context/WishlistContext.jsx'
 import Navbar from './components/Navbar.jsx'
+import NotificationToaster from './components/NotificationToaster.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HomePage from './pages/HomePage.jsx'
 import CatalogPage from './pages/CatalogPage.jsx'
@@ -26,6 +27,7 @@ function PageContainer({ children }) {
 export default function App() {
   return (
     <WishlistProvider>
+      <NotificationToaster />
       <Navbar />
       <main className="page-main">
         <Routes>
