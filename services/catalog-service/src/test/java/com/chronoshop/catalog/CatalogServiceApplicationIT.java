@@ -26,10 +26,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Puni HTTP tok kroz stvarnu bazu (Testcontainers Postgres + Flyway) - ADMIN pozivi
- * simuliraju X-User-Id/X-User-Roles zaglavlja koje bi inace postavio gateway.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.seed.enabled=false")
 @Testcontainers
@@ -72,12 +68,29 @@ class CatalogServiceApplicationIT {
     }
 
     @Test
-    void createWatch_withoutAdminRole_isForbidden() {
+    void createWatch_withoutAuthentication_isUnauthorized() {
         WatchRequest watchReq = new WatchRequest(
                 "Unauthorized Watch", "X-1", 1L, 1L, null,
                 new BigDecimal("100.00"), 1, null, null, null, null, List.of(), true, null, null, null);
 
         var response = restTemplate.postForEntity("/api/watches", watchReq, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void createWatch_withNonAdminRole_isForbidden() {
+        HttpHeaders customerHeaders = new HttpHeaders();
+        customerHeaders.set("X-User-Id", "2");
+        customerHeaders.set("X-User-Roles", "CUSTOMER");
+        customerHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        WatchRequest watchReq = new WatchRequest(
+                "Unauthorized Watch", "X-1", 1L, 1L, null,
+                new BigDecimal("100.00"), 1, null, null, null, null, List.of(), true, null, null, null);
+
+        var response = restTemplate.exchange("/api/watches", HttpMethod.POST,
+                new HttpEntity<>(watchReq, customerHeaders), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
