@@ -26,54 +26,54 @@ spring:
             redis-rate-limiter.requestedTokens: 1
       routes:
         - id: auth-service-auth
-          uri: ${app.services.auth-service.url:http://localhost:8081}
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/auth/**
 
         # Specificnija ruta MORA ici pre opste /api/account/** rute ispod nje -
         # Gateway uzima prvu rutu ciji predikat odgovara.
         - id: order-service-wishlist
-          uri: ${app.services.order-service.url:http://localhost:8083}
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/account/wishlist/**
         - id: auth-service-account
-          uri: ${app.services.auth-service.url:http://localhost:8081}
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/account/**
 
         - id: catalog-service-admin-uploads
-          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/admin/uploads/**
         - id: catalog-service-uploads
-          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/uploads/**
         - id: catalog-service-catalog
-          uri: ${app.services.catalog-service.url:http://localhost:8082}
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/watches/**,/api/brands/**,/api/categories/**
 
         - id: order-service-admin
-          uri: ${app.services.order-service.url:http://localhost:8083}
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/admin/orders/**
         - id: order-service-orders
-          uri: ${app.services.order-service.url:http://localhost:8083}
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/orders/**
 
         - id: payment-service-admin
-          uri: ${app.services.payment-service.url:http://localhost:8084}
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/admin/payments/**
         - id: payment-service-payments
-          uri: ${app.services.payment-service.url:http://localhost:8084}
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/payments/**
 
         - id: notification-service-stream
-          uri: ${app.services.notification-service.url:http://localhost:8085}
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/notifications/**
 

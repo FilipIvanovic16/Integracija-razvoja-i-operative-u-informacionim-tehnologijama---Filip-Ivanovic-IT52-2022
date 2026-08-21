@@ -1,0 +1,253 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chronoshop-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-chronoshop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chronoshop}
+      POSTGRES_DB: authdb
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - chronoshop-data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chronoshop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: chronoshop-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - chronoshop-data
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: chronoshop-redis
+    networks:
+      - chronoshop-data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    mem_limit: 128m
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: chronoshop-auth-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/authdb
+      DB_USER: ${POSTGRES_USER:-chronoshop}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-chronoshop}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      SEED_ENABLED: ${SEED_ENABLED:-true}
+    ports:
+      - "8081:8081"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  catalog-service:
+    build:
+      context: .
+      dockerfile: services/catalog-service/Dockerfile
+    container_name: chronoshop-catalog-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/catalogdb
+      DB_USER: ${POSTGRES_USER:-chronoshop}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-chronoshop}
+      UPLOAD_DIR: /app/uploads
+      SEED_ENABLED: ${SEED_ENABLED:-true}
+      GRPC_PORT: 9082
+    volumes:
+      - uploads-data:/app/uploads
+    ports:
+      - "8082:8082"
+      - "9082:9082"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: .
+      dockerfile: services/order-service/Dockerfile
+    container_name: chronoshop-order-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/orderdb
+      DB_USER: ${POSTGRES_USER:-chronoshop}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-chronoshop}
+      AUTH_SERVICE_URL: http://auth-service:8081
+      CATALOG_SERVICE_URL: http://catalog-service:8082
+      CATALOG_GRPC_TARGET: catalog-service:9082
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "8083:8083"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      catalog-service:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    container_name: chronoshop-payment-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/paymentdb
+      DB_USER: ${POSTGRES_USER:-chronoshop}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-chronoshop}
+      ORDER_SERVICE_URL: http://order-service:8083
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_xxx}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_xxx}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "8084:8084"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: chronoshop-notification-service
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
+    ports:
+      - "8085:8085"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: chronoshop-api-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      CATALOG_SERVICE_URL: http://catalog-service:8082
+      ORDER_SERVICE_URL: http://order-service:8083
+      PAYMENT_SERVICE_URL: http://payment-service:8084
+      NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    networks:
+      - chronoshop-net
+      - chronoshop-data
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      catalog-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-pk_test_xxx}
+    container_name: chronoshop-frontend
+    ports:
+      - "5173:80"
+    networks:
+      - chronoshop-net
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    mem_limit: 128m
+    restart: unless-stopped
+
+networks:
+  chronoshop-net:
+  chronoshop-data:
+
+volumes:
+  pg-data:
+  rabbit-data:
+  uploads-data:
