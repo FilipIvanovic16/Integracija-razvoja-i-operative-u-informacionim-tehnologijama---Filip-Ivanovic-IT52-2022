@@ -26,10 +26,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Puni HTTP tok kroz stvarnu bazu (Testcontainers Postgres + Flyway) - ADMIN pozivi
- * simuliraju X-User-Id/X-User-Roles zaglavlja koje bi inace postavio gateway.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.seed.enabled=false")
 @Testcontainers
