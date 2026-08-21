@@ -26,7 +26,7 @@ CREATE TABLE watches (
     movement            VARCHAR(20),
     gender              VARCHAR(10),
     case_diameter_mm    INTEGER,
-    water_resistance_m  INTEGER,
+    water_resistancem   INTEGER,
     image_url           VARCHAR(500),
     watch_condition     VARCHAR(20),
     documentation       VARCHAR(20),
