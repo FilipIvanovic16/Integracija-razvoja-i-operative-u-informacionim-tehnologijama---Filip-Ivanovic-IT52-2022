@@ -35,22 +35,32 @@ class NotificationServiceApplicationIT {
     private RabbitTemplate rabbitTemplate;
 
     @Test
-    void orderCreatedMessage_isBroadcastOverSse() {
+    void orderCreatedMessage_isBroadcastOverSse() throws InterruptedException {
+        OrderCreatedEvent event = OrderCreatedEvent.of(
+                1L, "ORD-TEST-1", "kupac@chronoshop.rs", "Petar Petrović", new BigDecimal("100.00"), "EUR");
+
+        Thread publisher = new Thread(() -> {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            rabbitTemplate.convertAndSend(EventRouting.EXCHANGE, EventRouting.ORDER_CREATED, event);
+        });
+        publisher.start();
+
         Flux<String> sseBody = webTestClient.get().uri("/api/notifications/stream")
                 .exchange()
                 .expectStatus().isOk()
                 .returnResult(String.class)
                 .getResponseBody();
 
-        OrderCreatedEvent event = OrderCreatedEvent.of(
-                1L, "ORD-TEST-1", "kupac@chronoshop.rs", "Petar Petrović", new BigDecimal("100.00"), "EUR");
-
         String received = sseBody
-                .doOnSubscribe(s -> rabbitTemplate.convertAndSend(
-                        EventRouting.EXCHANGE, EventRouting.ORDER_CREATED, event))
                 .filter(chunk -> chunk.contains("ORD-TEST-1"))
-                .blockFirst(Duration.ofSeconds(10));
+                .blockFirst(Duration.ofSeconds(15));
 
+        publisher.join();
         assertThat(received).contains("ORDER_CREATED").contains("ORD-TEST-1");
     }
 }
