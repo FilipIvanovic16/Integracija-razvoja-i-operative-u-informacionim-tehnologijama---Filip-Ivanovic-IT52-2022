@@ -1,0 +1,54 @@
+package com.chronoshop.notification;
+
+import com.chronoshop.event.EventRouting;
+import com.chronoshop.event.OrderCreatedEvent;
+import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Flux;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
+class NotificationServiceApplicationIT {
+
+    @Container
+    @ServiceConnection
+    static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3-management-alpine");
+
+    @Autowired
+    private WebTestClient webTestClient;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Test
+    void orderCreatedMessage_isBroadcastOverSse() {
+        Flux<String> sseBody = webTestClient.get().uri("/api/notifications/stream")
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(String.class)
+                .getResponseBody();
+
+        OrderCreatedEvent event = OrderCreatedEvent.of(
+                1L, "ORD-TEST-1", "kupac@chronoshop.rs", "Petar Petrović", new BigDecimal("100.00"), "EUR");
+
+        String received = sseBody
+                .doOnSubscribe(s -> rabbitTemplate.convertAndSend(
+                        EventRouting.EXCHANGE, EventRouting.ORDER_CREATED, event))
+                .filter(chunk -> chunk.contains("ORD-TEST-1"))
+                .blockFirst(Duration.ofSeconds(10));
+
+        assertThat(received).contains("ORDER_CREATED").contains("ORD-TEST-1");
+    }
+}
