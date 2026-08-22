@@ -15,7 +15,11 @@ export default function NotificationToaster() {
   return (
     <div className="toast-stack" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className={`toast toast-${t.type?.toLowerCase() || 'info'}`} onClick={() => dismiss(t.id)}>
+        <div
+          key={t.id}
+          className={`toast toast-${t.type?.toLowerCase() || 'info'}`}
+          onClick={() => dismiss(t.id)}
+        >
           <span className="toast-icon">{ICONS[t.type] || ICONS.INFO}</span>
           <div className="toast-body">
             <div className="toast-message">{t.message || 'Nova notifikacija'}</div>

@@ -32,20 +32,50 @@ export default function App() {
       <main className="page-main">
         <Routes>
           {/* Puna širina — bez wrapera */}
-          <Route path="/"          element={<HomePage />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/watches/:id" element={<WatchDetailPage />} />
 
           {/* Standardne stranice sa container wrapperom */}
-          <Route path="/catalog"  element={<PageContainer><CatalogPage /></PageContainer>} />
-          <Route path="/cart"     element={<PageContainer><CartPage /></PageContainer>} />
-          <Route path="/login"    element={<PageContainer><LoginPage /></PageContainer>} />
-          <Route path="/register" element={<PageContainer><RegisterPage /></PageContainer>} />
+          <Route
+            path="/catalog"
+            element={
+              <PageContainer>
+                <CatalogPage />
+              </PageContainer>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <PageContainer>
+                <CartPage />
+              </PageContainer>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PageContainer>
+                <LoginPage />
+              </PageContainer>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PageContainer>
+                <RegisterPage />
+              </PageContainer>
+            }
+          />
 
           <Route
             path="/checkout"
             element={
               <ProtectedRoute>
-                <PageContainer><CheckoutPage /></PageContainer>
+                <PageContainer>
+                  <CheckoutPage />
+                </PageContainer>
               </ProtectedRoute>
             }
           />
@@ -53,7 +83,9 @@ export default function App() {
             path="/orders"
             element={
               <ProtectedRoute>
-                <PageContainer><OrdersPage /></PageContainer>
+                <PageContainer>
+                  <OrdersPage />
+                </PageContainer>
               </ProtectedRoute>
             }
           />
@@ -61,7 +93,9 @@ export default function App() {
             path="/account"
             element={
               <ProtectedRoute>
-                <PageContainer><AccountPage /></PageContainer>
+                <PageContainer>
+                  <AccountPage />
+                </PageContainer>
               </ProtectedRoute>
             }
           />
@@ -70,15 +104,17 @@ export default function App() {
             path="/admin"
             element={
               <ProtectedRoute adminOnly>
-                <PageContainer><AdminLayout /></PageContainer>
+                <PageContainer>
+                  <AdminLayout />
+                </PageContainer>
               </ProtectedRoute>
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="watches"      element={<AdminWatches />} />
+            <Route path="watches" element={<AdminWatches />} />
             <Route path="transactions" element={<AdminTransactions />} />
-            <Route path="orders"       element={<AdminOrders />} />
-            <Route path="users"        element={<AdminUsers />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

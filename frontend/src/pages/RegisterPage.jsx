@@ -6,7 +6,13 @@ import { apiErrorMessage } from '../api/client'
 export default function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', confirm: '' })
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirm: '',
+  })
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -70,7 +76,12 @@ export default function RegisterPage() {
         </div>
         <div className="field">
           <label>Lozinka</label>
-          <input className="input" type="password" value={form.password} onChange={set('password')} />
+          <input
+            className="input"
+            type="password"
+            value={form.password}
+            onChange={set('password')}
+          />
           {errors.password && <span className="field-error">{errors.password}</span>}
         </div>
         <div className="field">

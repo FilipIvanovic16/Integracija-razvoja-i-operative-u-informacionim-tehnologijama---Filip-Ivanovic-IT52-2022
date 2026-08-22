@@ -12,7 +12,8 @@ export default function AdminTransactions() {
   useEffect(() => {
     const params = { page, size: 15, sort: 'createdAt,desc' }
     if (status) params.status = status
-    api.get('/admin/payments', { params })
+    api
+      .get('/admin/payments', { params })
       .then((r) => setData(r.data))
       .catch((e) => setError(apiErrorMessage(e)))
   }, [page, status])
@@ -21,14 +22,25 @@ export default function AdminTransactions() {
     <div>
       <div className="row-between">
         <h3 style={{ margin: 0 }}>Transakcije (Stripe)</h3>
-        <select className="select" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0) }}>
+        <select
+          className="select"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setPage(0)
+          }}
+        >
           <option value="">Svi statusi</option>
           {Object.keys(PAYMENT_STATUS_LABELS).map((s) => (
-            <option key={s} value={s}>{PAYMENT_STATUS_LABELS[s]}</option>
+            <option key={s} value={s}>
+              {PAYMENT_STATUS_LABELS[s]}
+            </option>
           ))}
         </select>
       </div>
-      <p className="muted">Podaci o uplatama dolaze automatski preko Stripe webhook-a nakon potvrde naplate.</p>
+      <p className="muted">
+        Podaci o uplatama dolaze automatski preko Stripe webhook-a nakon potvrde naplate.
+      </p>
       {error && <div className="alert alert-error">{error}</div>}
 
       {data.content.length === 0 ? (
@@ -37,16 +49,35 @@ export default function AdminTransactions() {
         <>
           <table className="table">
             <thead>
-              <tr><th>Porudžbina</th><th>Kupac</th><th>Iznos</th><th>Status</th><th>PaymentIntent</th><th>Plaćeno</th></tr>
+              <tr>
+                <th>Porudžbina</th>
+                <th>Kupac</th>
+                <th>Iznos</th>
+                <th>Status</th>
+                <th>PaymentIntent</th>
+                <th>Plaćeno</th>
+              </tr>
             </thead>
             <tbody>
               {data.content.map((t) => (
                 <tr key={t.id}>
                   <td>{t.orderNumber}</td>
-                  <td>{t.customerName}<br /><span className="muted" style={{ fontSize: '.8rem' }}>{t.customerEmail}</span></td>
+                  <td>
+                    {t.customerName}
+                    <br />
+                    <span className="muted" style={{ fontSize: '.8rem' }}>
+                      {t.customerEmail}
+                    </span>
+                  </td>
                   <td>{formatPrice(t.amount)}</td>
-                  <td><span className={`pill pill-${t.status}`}>{PAYMENT_STATUS_LABELS[t.status]}</span></td>
-                  <td className="muted" style={{ fontSize: '.78rem' }}>{t.stripePaymentIntentId}</td>
+                  <td>
+                    <span className={`pill pill-${t.status}`}>
+                      {PAYMENT_STATUS_LABELS[t.status]}
+                    </span>
+                  </td>
+                  <td className="muted" style={{ fontSize: '.78rem' }}>
+                    {t.stripePaymentIntentId}
+                  </td>
                   <td className="muted">{t.paidAt ? formatDate(t.paidAt) : '-'}</td>
                 </tr>
               ))}

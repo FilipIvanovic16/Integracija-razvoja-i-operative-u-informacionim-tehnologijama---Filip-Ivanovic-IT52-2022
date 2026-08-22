@@ -12,7 +12,9 @@ export default function CartPage() {
     return (
       <div>
         <h1 className="page-title">Korpa</h1>
-        <div className="alert alert-info">Vaša korpa je prazna. <Link to="/">Pogledajte katalog →</Link></div>
+        <div className="alert alert-info">
+          Vaša korpa je prazna. <Link to="/">Pogledajte katalog →</Link>
+        </div>
       </div>
     )
   }
@@ -29,10 +31,16 @@ export default function CartPage() {
         <div className="card" style={{ padding: '6px 18px' }}>
           {items.map((i) => (
             <div className="cart-row" key={i.watchId}>
-              {i.imageUrl ? <img src={i.imageUrl} alt={i.name} /> : <div className="image-placeholder">⌚</div>}
+              {i.imageUrl ? (
+                <img src={i.imageUrl} alt={i.name} />
+              ) : (
+                <div className="image-placeholder">⌚</div>
+              )}
               <div>
                 <div style={{ fontWeight: 600 }}>{i.name}</div>
-                <div className="muted" style={{ fontSize: '.82rem' }}>{i.brand}</div>
+                <div className="muted" style={{ fontSize: '.82rem' }}>
+                  {i.brand}
+                </div>
               </div>
               <div className="qty">
                 <input
@@ -45,15 +53,23 @@ export default function CartPage() {
                 />
               </div>
               <div>{formatPrice(Number(i.price) * i.quantity)}</div>
-              <button className="btn btn-ghost btn-sm" onClick={() => removeItem(i.watchId)}>Ukloni</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => removeItem(i.watchId)}>
+                Ukloni
+              </button>
             </div>
           ))}
         </div>
 
         <div className="summary">
           <h3 style={{ marginTop: 0 }}>Pregled</h3>
-          <div className="summary-row"><span>Broj artikala</span><span>{items.length}</span></div>
-          <div className="summary-row summary-total"><span>Ukupno</span><span>{formatPrice(total)}</span></div>
+          <div className="summary-row">
+            <span>Broj artikala</span>
+            <span>{items.length}</span>
+          </div>
+          <div className="summary-row summary-total">
+            <span>Ukupno</span>
+            <span>{formatPrice(total)}</span>
+          </div>
           <button className="btn btn-primary btn-block mt" onClick={proceed}>
             Nastavi na plaćanje
           </button>

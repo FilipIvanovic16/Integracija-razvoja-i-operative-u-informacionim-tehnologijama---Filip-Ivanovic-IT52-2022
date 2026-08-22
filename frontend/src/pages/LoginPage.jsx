@@ -37,11 +37,21 @@ export default function LoginPage() {
       <form onSubmit={onSubmit}>
         <div className="field">
           <label>Email</label>
-          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className="input"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="field">
           <label>Lozinka</label>
-          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? 'Prijavljivanje…' : 'Prijavi se'}
@@ -51,8 +61,10 @@ export default function LoginPage() {
         Nemate nalog? <Link to="/register">Registrujte se</Link>
       </p>
       <div className="alert alert-info mt">
-        <strong>Demo nalozi:</strong><br />
-        Admin: admin@chronoshop.rs / Admin123!<br />
+        <strong>Demo nalozi:</strong>
+        <br />
+        Admin: admin@chronoshop.rs / Admin123!
+        <br />
         Kupac: kupac@chronoshop.rs / Kupac123!
       </div>
     </div>

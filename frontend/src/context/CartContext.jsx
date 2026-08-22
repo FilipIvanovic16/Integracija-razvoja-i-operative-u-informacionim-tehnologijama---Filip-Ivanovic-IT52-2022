@@ -12,7 +12,6 @@ export function CartProvider({ children }) {
     localStorage.setItem('cs_cart', JSON.stringify(items))
   }, [items])
 
-  
   function addItem(watch, quantity = 1) {
     setItems((prev) => {
       const existing = prev.find((i) => i.watchId === watch.id)

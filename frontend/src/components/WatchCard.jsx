@@ -6,31 +6,38 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useWishlist } from '../context/WishlistContext.jsx'
 
 export default function WatchCard({ watch }) {
-  const { addItem }    = useCart()
-  const { user }       = useAuth()
+  const { addItem } = useCart()
+  const { user } = useAuth()
   const { wishlistIds, addToWishlist, removeFromWishlist } = useWishlist()
-  const outOfStock     = !watch.inStock
-  const wishlisted     = wishlistIds.has(watch.id)
-  const CONDITION_LABELS = { NEW: 'Nov', VERY_GOOD: 'Veoma dobro', GOOD: 'Dobro', DAMAGED: 'Oštećen' }
-  const [wMsg, setWMsg]   = useState('')
+  const outOfStock = !watch.inStock
+  const wishlisted = wishlistIds.has(watch.id)
+  const CONDITION_LABELS = {
+    NEW: 'Nov',
+    VERY_GOOD: 'Veoma dobro',
+    GOOD: 'Dobro',
+    DAMAGED: 'Oštećen',
+  }
+  const [wMsg, setWMsg] = useState('')
   const [imgIdx, setImgIdx] = useState(0)
 
-  const images = watch.imageUrls?.length > 0
-    ? watch.imageUrls
-    : (watch.imageUrl ? [watch.imageUrl] : [])
+  const images =
+    watch.imageUrls?.length > 0 ? watch.imageUrls : watch.imageUrl ? [watch.imageUrl] : []
 
   function prevImg(e) {
-    e.preventDefault(); e.stopPropagation()
-    setImgIdx(i => (i - 1 + images.length) % images.length)
+    e.preventDefault()
+    e.stopPropagation()
+    setImgIdx((i) => (i - 1 + images.length) % images.length)
   }
 
   function nextImg(e) {
-    e.preventDefault(); e.stopPropagation()
-    setImgIdx(i => (i + 1) % images.length)
+    e.preventDefault()
+    e.stopPropagation()
+    setImgIdx((i) => (i + 1) % images.length)
   }
 
   function goToDot(e, i) {
-    e.preventDefault(); e.stopPropagation()
+    e.preventDefault()
+    e.stopPropagation()
     setImgIdx(i)
   }
 
@@ -55,7 +62,14 @@ export default function WatchCard({ watch }) {
     <div className="card watch-card">
       <Link to={`/watches/${watch.id}`} className="watch-image">
         {images.length > 0 ? (
-          <img src={images[imgIdx]} alt={watch.name} loading="lazy" onError={e => { e.target.style.display='none' }} />
+          <img
+            src={images[imgIdx]}
+            alt={watch.name}
+            loading="lazy"
+            onError={(e) => {
+              e.target.style.display = 'none'
+            }}
+          />
         ) : (
           <div className="image-placeholder">⌚</div>
         )}
@@ -79,14 +93,18 @@ export default function WatchCard({ watch }) {
 
         {images.length > 1 && (
           <>
-            <button className="card-arrow card-arrow-left" onClick={prevImg} title="Prethodna">‹</button>
-            <button className="card-arrow card-arrow-right" onClick={nextImg} title="Sledeća">›</button>
+            <button className="card-arrow card-arrow-left" onClick={prevImg} title="Prethodna">
+              ‹
+            </button>
+            <button className="card-arrow card-arrow-right" onClick={nextImg} title="Sledeća">
+              ›
+            </button>
             <div className="card-dots">
               {images.map((_, i) => (
                 <button
                   key={i}
                   className={`card-dot${i === imgIdx ? ' active' : ''}`}
-                  onClick={e => goToDot(e, i)}
+                  onClick={(e) => goToDot(e, i)}
                 />
               ))}
             </div>
@@ -97,7 +115,9 @@ export default function WatchCard({ watch }) {
       </Link>
       <div className="watch-body">
         <span className="watch-brand">{watch.brand?.name}</span>
-        <Link to={`/watches/${watch.id}`} className="watch-name">{watch.name}</Link>
+        <Link to={`/watches/${watch.id}`} className="watch-name">
+          {watch.name}
+        </Link>
         <span className="watch-ref">{watch.referenceNumber}</span>
         <div className="watch-footer">
           <span className="price">{formatPrice(watch.price)}</span>
