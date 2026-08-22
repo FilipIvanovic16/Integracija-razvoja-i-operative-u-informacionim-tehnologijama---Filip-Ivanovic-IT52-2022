@@ -12,17 +12,17 @@ import lombok.Setter;
 @NoArgsConstructor
 public class WatchImage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "watch_id", nullable = false)
-    private Watch watch;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "watch_id", nullable = false)
+  private Watch watch;
 
-    @Column(nullable = false, length = 1000)
-    private String url;
+  @Column(nullable = false, length = 1000)
+  private String url;
 
-    @Column(name = "sort_order", nullable = false)
-    private Integer sortOrder = 0;
+  @Column(name = "sort_order", nullable = false)
+  private Integer sortOrder = 0;
 }

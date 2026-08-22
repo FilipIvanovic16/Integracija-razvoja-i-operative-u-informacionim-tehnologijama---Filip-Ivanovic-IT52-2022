@@ -10,25 +10,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentEventListener {
 
-    private final NotificationBroadcaster broadcaster;
+  private final NotificationBroadcaster broadcaster;
 
-    public PaymentEventListener(NotificationBroadcaster broadcaster) {
-        this.broadcaster = broadcaster;
-    }
+  public PaymentEventListener(NotificationBroadcaster broadcaster) {
+    this.broadcaster = broadcaster;
+  }
 
-    @RabbitListener(queues = "notification-service.payment.completed")
-    public void onPaymentCompleted(PaymentCompletedEvent event) {
-        broadcaster.publish(NotificationEvent.of(
-                "PAYMENT_COMPLETED",
-                "Plaćanje za porudžbinu " + event.orderNumber() + " je uspešno.",
-                event.orderNumber()));
-    }
+  @RabbitListener(queues = "notification-service.payment.completed")
+  public void onPaymentCompleted(PaymentCompletedEvent event) {
+    broadcaster.publish(
+        NotificationEvent.of(
+            "PAYMENT_COMPLETED",
+            "Plaćanje za porudžbinu " + event.orderNumber() + " je uspešno.",
+            event.orderNumber()));
+  }
 
-    @RabbitListener(queues = "notification-service.payment.failed")
-    public void onPaymentFailed(PaymentFailedEvent event) {
-        broadcaster.publish(NotificationEvent.of(
-                "PAYMENT_FAILED",
-                "Plaćanje za porudžbinu " + event.orderNumber() + " nije uspelo.",
-                event.orderNumber()));
-    }
+  @RabbitListener(queues = "notification-service.payment.failed")
+  public void onPaymentFailed(PaymentFailedEvent event) {
+    broadcaster.publish(
+        NotificationEvent.of(
+            "PAYMENT_FAILED",
+            "Plaćanje za porudžbinu " + event.orderNumber() + " nije uspelo.",
+            event.orderNumber()));
+  }
 }

@@ -1,9 +1,8 @@
 package com.chronoshop.domain.enums;
 
-
 public enum MovementType {
-    AUTOMATIC,
-    MANUAL,
-    QUARTZ,
-    SPRING_DRIVE
+  AUTOMATIC,
+  MANUAL,
+  QUARTZ,
+  SPRING_DRIVE
 }

@@ -12,33 +12,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Porudžbine ulogovanog korisnika.
- */
+/** Porudžbine ulogovanog korisnika. */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    private final OrderService orderService;
+  private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+  public OrderController(OrderService orderService) {
+    this.orderService = orderService;
+  }
 
-    @PostMapping
-    public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest request) {
-        OrderResponse response = orderService.createOrder(SecurityUtils.currentUserId(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+  @PostMapping
+  public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest request) {
+    OrderResponse response = orderService.createOrder(SecurityUtils.currentUserId(), request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
 
-    @GetMapping
-    public PageResponse<OrderResponse> myOrders(
-            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
-        return orderService.listForUser(SecurityUtils.currentUserId(), pageable);
-    }
+  @GetMapping
+  public PageResponse<OrderResponse> myOrders(
+      @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+    return orderService.listForUser(SecurityUtils.currentUserId(), pageable);
+  }
 
-    @GetMapping("/{id}")
-    public OrderResponse getOne(@PathVariable Long id) {
-        return orderService.getForUser(SecurityUtils.currentUserId(), id, SecurityUtils.isAdmin());
-    }
+  @GetMapping("/{id}")
+  public OrderResponse getOne(@PathVariable Long id) {
+    return orderService.getForUser(SecurityUtils.currentUserId(), id, SecurityUtils.isAdmin());
+  }
 }

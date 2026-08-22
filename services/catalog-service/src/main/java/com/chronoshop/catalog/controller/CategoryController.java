@@ -15,37 +15,38 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryService categoryService;
+  private final CategoryService categoryService;
 
-    public CategoryController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
+  public CategoryController(CategoryService categoryService) {
+    this.categoryService = categoryService;
+  }
 
-    @GetMapping
-    public PageResponse<CategoryResponse> search(
-            @RequestParam(required = false) String q,
-            @PageableDefault(size = 50, sort = "name") Pageable pageable) {
-        return categoryService.search(q, pageable);
-    }
+  @GetMapping
+  public PageResponse<CategoryResponse> search(
+      @RequestParam(required = false) String q,
+      @PageableDefault(size = 50, sort = "name") Pageable pageable) {
+    return categoryService.search(q, pageable);
+  }
 
-    @GetMapping("/{id}")
-    public CategoryResponse getById(@PathVariable Long id) {
-        return categoryService.getById(id);
-    }
+  @GetMapping("/{id}")
+  public CategoryResponse getById(@PathVariable Long id) {
+    return categoryService.getById(id);
+  }
 
-    @PostMapping
-    public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
-    }
+  @PostMapping
+  public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryRequest request) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
+  }
 
-    @PutMapping("/{id}")
-    public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
-        return categoryService.update(id, request);
-    }
+  @PutMapping("/{id}")
+  public CategoryResponse update(
+      @PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
+    return categoryService.update(id, request);
+  }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        categoryService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(@PathVariable Long id) {
+    categoryService.delete(id);
+    return ResponseEntity.noContent().build();
+  }
 }
