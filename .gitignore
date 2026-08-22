@@ -32,3 +32,8 @@ test-results/
 # OS
 Thumbs.db
 .DS_Store
+
+# Claude Code (lokalni radni fajlovi, nisu deo projekta)
+.claude/
+CLAUDE.md
+PLAN-7-DANA.md
