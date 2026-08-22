@@ -4,9 +4,9 @@ import api from '../api/client'
 import WatchCard from '../components/WatchCard.jsx'
 
 const GENDER_TABS = [
-  { label: 'Muški satovi',  value: 'MENS',   icon: '♂' },
+  { label: 'Muški satovi', value: 'MENS', icon: '♂' },
   { label: 'Ženski satovi', value: 'WOMENS', icon: '♀' },
-  { label: 'Unisex',        value: 'UNISEX', icon: '◎' },
+  { label: 'Unisex', value: 'UNISEX', icon: '◎' },
 ]
 
 const TESTIMONIALS = [
@@ -36,13 +36,17 @@ const TESTIMONIALS = [
 export default function HomePage() {
   const navigate = useNavigate()
   const [featured, setFeatured] = useState([])
-  const [brands,   setBrands]   = useState([])
+  const [brands, setBrands] = useState([])
 
   useEffect(() => {
-    api.get('/watches', { params: { size: 6, sort: 'price,desc' } })
-      .then(r => setFeatured(r.data.content || [])).catch(() => {})
-    api.get('/brands', { params: { size: 100 } })
-      .then(r => setBrands(r.data.content || [])).catch(() => {})
+    api
+      .get('/watches', { params: { size: 6, sort: 'price,desc' } })
+      .then((r) => setFeatured(r.data.content || []))
+      .catch(() => {})
+    api
+      .get('/brands', { params: { size: 100 } })
+      .then((r) => setBrands(r.data.content || []))
+      .catch(() => {})
   }, [])
 
   const goToCatalog = (params = {}) => {
@@ -52,14 +56,19 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-
       {/* ══ HERO ══════════════════════════════════════════════ */}
       <section className="hero-section">
         <div className="hero-overlay" />
         <div className="container hero-content">
           <p className="hero-eyebrow">ChronoShop kolekcija</p>
-          <h1 className="hero-title">Luksuzni satovi<br />po najboljim cenama</h1>
-          <p className="hero-desc">Otkrijte stotine verifikovanih timepieces od vrhunskih brendova</p>
+          <h1 className="hero-title">
+            Luksuzni satovi
+            <br />
+            po najboljim cenama
+          </h1>
+          <p className="hero-desc">
+            Otkrijte stotine verifikovanih timepieces od vrhunskih brendova
+          </p>
           <button className="btn btn-primary hero-cta" onClick={() => goToCatalog()}>
             Istraži kolekciju →
           </button>
@@ -85,7 +94,7 @@ export default function HomePage() {
         <div className="container">
           <h2 className="section-title">Istraži po kategoriji</h2>
           <div className="gender-tabs">
-            {GENDER_TABS.map(g => (
+            {GENDER_TABS.map((g) => (
               <button
                 key={g.value}
                 className="gender-tab"
@@ -104,12 +113,17 @@ export default function HomePage() {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Najpopularniji modeli</h2>
-            <button className="btn btn-ghost btn-sm" onClick={() => goToCatalog({ sort: 'price,desc' })}>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => goToCatalog({ sort: 'price,desc' })}
+            >
               Prikaži sve →
             </button>
           </div>
           <div className="grid featured-grid">
-            {featured.map(w => <WatchCard key={w.id} watch={w} />)}
+            {featured.map((w) => (
+              <WatchCard key={w.id} watch={w} />
+            ))}
           </div>
         </div>
       </section>
@@ -119,7 +133,7 @@ export default function HomePage() {
         <div className="container">
           <h2 className="section-title">Popularni brendovi</h2>
           <div className="brands-strip">
-            {brands.map(b => (
+            {brands.map((b) => (
               <button
                 key={b.id}
                 className="brand-pill"
@@ -139,8 +153,11 @@ export default function HomePage() {
           <div className="testimonials-grid">
             {TESTIMONIALS.map((t, i) => (
               <div key={i} className="testimonial-card">
-                <div className="stars">{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</div>
-                <p className="testimonial-text">"{t.text}"</p>
+                <div className="stars">
+                  {'★'.repeat(t.rating)}
+                  {'☆'.repeat(5 - t.rating)}
+                </div>
+                <p className="testimonial-text">&ldquo;{t.text}&rdquo;</p>
                 <div className="testimonial-footer">
                   <div className="testimonial-avatar">{t.avatar}</div>
                   <div>
@@ -153,7 +170,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   )
 }

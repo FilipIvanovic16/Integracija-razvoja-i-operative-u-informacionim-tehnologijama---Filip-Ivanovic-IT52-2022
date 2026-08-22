@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-java@v4
         with:
@@ -24,8 +26,29 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Run mvnw verify (unit + Testcontainers IT + JaCoCo)
+      - name: Run mvnw verify (unit + Testcontainers IT + JaCoCo + Spotless)
         run: ./mvnw -B verify -DskipITs=false
+
+      - name: Checkstyle report (Google style, informational)
+        run: ./mvnw -B checkstyle:checkstyle
+        continue-on-error: true
+
+      - name: Upload Checkstyle reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-reports
+          path: services/*/target/checkstyle-result.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: SonarCloud scan
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        uses: SonarSource/sonarqube-scan-action@v6
 
       - name: Upload service jars
         if: always()
@@ -71,6 +94,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
       - run: npm test
       - run: npm run build
 

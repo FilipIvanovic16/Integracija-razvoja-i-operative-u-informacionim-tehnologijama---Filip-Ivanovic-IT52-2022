@@ -9,22 +9,32 @@ export function WishlistProvider({ children }) {
   const [wishlistIds, setWishlistIds] = useState(new Set())
 
   const refresh = useCallback(() => {
-    if (!user) { setWishlistIds(new Set()); return }
-    api.get('/account/wishlist')
-      .then(r => setWishlistIds(new Set((r.data || []).map(item => item.watch?.id))))
+    if (!user) {
+      setWishlistIds(new Set())
+      return
+    }
+    api
+      .get('/account/wishlist')
+      .then((r) => setWishlistIds(new Set((r.data || []).map((item) => item.watch?.id))))
       .catch(() => {})
   }, [user])
 
-  useEffect(() => { refresh() }, [refresh])
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   async function addToWishlist(watchId) {
     await api.post('/account/wishlist', { watchId })
-    setWishlistIds(prev => new Set([...prev, watchId]))
+    setWishlistIds((prev) => new Set([...prev, watchId]))
   }
 
   async function removeFromWishlist(watchId) {
     await api.delete(`/account/wishlist/${watchId}`)
-    setWishlistIds(prev => { const s = new Set(prev); s.delete(watchId); return s })
+    setWishlistIds((prev) => {
+      const s = new Set(prev)
+      s.delete(watchId)
+      return s
+    })
   }
 
   return (

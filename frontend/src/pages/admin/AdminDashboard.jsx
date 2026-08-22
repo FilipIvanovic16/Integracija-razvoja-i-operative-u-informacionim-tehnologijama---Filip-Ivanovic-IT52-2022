@@ -12,26 +12,43 @@ export default function AdminDashboard() {
       api.get('/admin/orders', { params: { size: 1 } }),
       api.get('/admin/users', { params: { size: 1 } }),
       api.get('/admin/payments', { params: { size: 100, status: 'SUCCEEDED' } }),
-    ]).then(([w, o, u, p]) => {
-      const revenue = p.data.content.reduce((s, t) => s + Number(t.amount), 0)
-      setStats({
-        watches: w.data.totalElements,
-        orders: o.data.totalElements,
-        users: u.data.totalElements,
-        revenue,
+    ])
+      .then(([w, o, u, p]) => {
+        const revenue = p.data.content.reduce((s, t) => s + Number(t.amount), 0)
+        setStats({
+          watches: w.data.totalElements,
+          orders: o.data.totalElements,
+          users: u.data.totalElements,
+          revenue,
+        })
       })
-    }).catch(() => {})
+      .catch(() => {})
 
-    api.get('/admin/payments', { params: { size: 5 } }).then((r) => setRecent(r.data.content)).catch(() => {})
+    api
+      .get('/admin/payments', { params: { size: 5 } })
+      .then((r) => setRecent(r.data.content))
+      .catch(() => {})
   }, [])
 
   return (
     <div>
       <div className="stat-grid">
-        <div className="stat"><div className="v">{stats.watches}</div><div className="l">Satova u katalogu</div></div>
-        <div className="stat"><div className="v">{stats.orders}</div><div className="l">Porudžbina</div></div>
-        <div className="stat"><div className="v">{stats.users}</div><div className="l">Korisnika</div></div>
-        <div className="stat"><div className="v">{formatPrice(stats.revenue)}</div><div className="l">Prihod (plaćeno)</div></div>
+        <div className="stat">
+          <div className="v">{stats.watches}</div>
+          <div className="l">Satova u katalogu</div>
+        </div>
+        <div className="stat">
+          <div className="v">{stats.orders}</div>
+          <div className="l">Porudžbina</div>
+        </div>
+        <div className="stat">
+          <div className="v">{stats.users}</div>
+          <div className="l">Korisnika</div>
+        </div>
+        <div className="stat">
+          <div className="v">{formatPrice(stats.revenue)}</div>
+          <div className="l">Prihod (plaćeno)</div>
+        </div>
       </div>
 
       <h3>Najnovije transakcije</h3>
@@ -39,14 +56,24 @@ export default function AdminDashboard() {
         <p className="muted">Još uvek nema transakcija.</p>
       ) : (
         <table className="table">
-          <thead><tr><th>Porudžbina</th><th>Kupac</th><th>Iznos</th><th>Status</th><th>Vreme</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Porudžbina</th>
+              <th>Kupac</th>
+              <th>Iznos</th>
+              <th>Status</th>
+              <th>Vreme</th>
+            </tr>
+          </thead>
           <tbody>
             {recent.map((t) => (
               <tr key={t.id}>
                 <td>{t.orderNumber}</td>
                 <td>{t.customerEmail}</td>
                 <td>{formatPrice(t.amount)}</td>
-                <td><span className={`pill pill-${t.status}`}>{PAYMENT_STATUS_LABELS[t.status]}</span></td>
+                <td>
+                  <span className={`pill pill-${t.status}`}>{PAYMENT_STATUS_LABELS[t.status]}</span>
+                </td>
                 <td className="muted">{formatDate(t.createdAt)}</td>
               </tr>
             ))}

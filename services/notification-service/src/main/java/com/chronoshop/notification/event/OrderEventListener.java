@@ -9,17 +9,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderEventListener {
 
-    private final NotificationBroadcaster broadcaster;
+  private final NotificationBroadcaster broadcaster;
 
-    public OrderEventListener(NotificationBroadcaster broadcaster) {
-        this.broadcaster = broadcaster;
-    }
+  public OrderEventListener(NotificationBroadcaster broadcaster) {
+    this.broadcaster = broadcaster;
+  }
 
-    @RabbitListener(queues = "notification-service.order.created")
-    public void onOrderCreated(OrderCreatedEvent event) {
-        broadcaster.publish(NotificationEvent.of(
-                "ORDER_CREATED",
-                "Porudžbina " + event.orderNumber() + " je kreirana.",
-                event.orderNumber()));
-    }
+  @RabbitListener(queues = "notification-service.order.created")
+  public void onOrderCreated(OrderCreatedEvent event) {
+    broadcaster.publish(
+        NotificationEvent.of(
+            "ORDER_CREATED",
+            "Porudžbina " + event.orderNumber() + " je kreirana.",
+            event.orderNumber()));
+  }
 }

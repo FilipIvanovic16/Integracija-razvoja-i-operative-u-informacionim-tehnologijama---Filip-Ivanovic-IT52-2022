@@ -53,7 +53,9 @@ export default function OrdersPage() {
                 </tbody>
               </table>
               <div className="row-between mt">
-                <span className="muted">Isporuka: {o.shippingStreet}, {o.shippingCity}</span>
+                <span className="muted">
+                  Isporuka: {o.shippingStreet}, {o.shippingCity}
+                </span>
                 <strong>Ukupno: {formatPrice(o.totalAmount)}</strong>
               </div>
             </div>

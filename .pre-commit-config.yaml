@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: spotless-check
+        name: Spotless (Google Java Format)
+        entry: ./mvnw -q spotless:check
+        language: system
+        files: \.java$
+        pass_filenames: false
+
+      - id: eslint
+        name: ESLint (frontend)
+        entry: npm --prefix frontend run lint
+        language: system
+        files: ^frontend/.*\.(js|jsx)$
+        pass_filenames: false
+
+      - id: prettier-check
+        name: Prettier check (frontend)
+        entry: npm --prefix frontend run format:check
+        language: system
+        files: ^frontend/.*\.(js|jsx|json|css|md)$
+        pass_filenames: false

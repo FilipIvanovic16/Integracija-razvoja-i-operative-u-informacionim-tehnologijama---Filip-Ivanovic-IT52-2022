@@ -12,19 +12,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Brand {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String name;
+  @Column(nullable = false, length = 100)
+  private String name;
 
-    @Column(length = 80)
-    private String country;
+  @Column(length = 80)
+  private String country;
 
-    @Column(length = 1000)
-    private String description;
+  @Column(length = 1000)
+  private String description;
 
-    @Column(length = 500)
-    private String logoUrl;
+  @Column(length = 500)
+  private String logoUrl;
 }

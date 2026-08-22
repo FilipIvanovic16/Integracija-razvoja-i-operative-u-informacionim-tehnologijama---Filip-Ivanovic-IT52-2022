@@ -12,15 +12,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class OrderServiceApplicationIT {
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+  @Container @ServiceConnection
+  static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-    @Container
-    @ServiceConnection
-    static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3-management-alpine");
+  @Container @ServiceConnection
+  static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3-management-alpine");
 
-    @Test
-    void contextLoads() {
-    }
+  @Test
+  void contextLoads() {}
 }

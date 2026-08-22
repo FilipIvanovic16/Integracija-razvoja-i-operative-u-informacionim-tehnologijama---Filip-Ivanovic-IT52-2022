@@ -11,21 +11,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentEventPublisher {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentEventPublisher.class);
+  private static final Logger log = LoggerFactory.getLogger(PaymentEventPublisher.class);
 
-    private final RabbitTemplate rabbitTemplate;
+  private final RabbitTemplate rabbitTemplate;
 
-    public PaymentEventPublisher(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-    }
+  public PaymentEventPublisher(RabbitTemplate rabbitTemplate) {
+    this.rabbitTemplate = rabbitTemplate;
+  }
 
-    public void publishCompleted(PaymentCompletedEvent event) {
-        rabbitTemplate.convertAndSend(EventRouting.EXCHANGE, EventRouting.PAYMENT_COMPLETED, event);
-        log.info("Objavljen payment.completed za porudžbinu {}.", event.orderNumber());
-    }
+  public void publishCompleted(PaymentCompletedEvent event) {
+    rabbitTemplate.convertAndSend(EventRouting.EXCHANGE, EventRouting.PAYMENT_COMPLETED, event);
+    log.info("Objavljen payment.completed za porudžbinu {}.", event.orderNumber());
+  }
 
-    public void publishFailed(PaymentFailedEvent event) {
-        rabbitTemplate.convertAndSend(EventRouting.EXCHANGE, EventRouting.PAYMENT_FAILED, event);
-        log.info("Objavljen payment.failed za porudžbinu {}.", event.orderNumber());
-    }
+  public void publishFailed(PaymentFailedEvent event) {
+    rabbitTemplate.convertAndSend(EventRouting.EXCHANGE, EventRouting.PAYMENT_FAILED, event);
+    log.info("Objavljen payment.failed za porudžbinu {}.", event.orderNumber());
+  }
 }

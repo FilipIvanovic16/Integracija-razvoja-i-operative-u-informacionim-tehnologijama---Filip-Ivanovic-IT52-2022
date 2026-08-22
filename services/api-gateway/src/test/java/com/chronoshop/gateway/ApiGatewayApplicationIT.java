@@ -14,25 +14,25 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 class ApiGatewayApplicationIT {
 
-    @Container
-    @ServiceConnection("redis")
-    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
-            .withExposedPorts(6379);
+  @Container
+  @ServiceConnection("redis")
+  static GenericContainer<?> redis =
+      new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
 
-    @Autowired
-    private WebTestClient webTestClient;
+  @Autowired private WebTestClient webTestClient;
 
-    @Test
-    void protectedRoute_withoutToken_returns401() {
-        webTestClient.get().uri("/api/orders")
-                .exchange()
-                .expectStatus().isUnauthorized();
-    }
+  @Test
+  void protectedRoute_withoutToken_returns401() {
+    webTestClient.get().uri("/api/orders").exchange().expectStatus().isUnauthorized();
+  }
 
-    @Test
-    void authRoute_isPublic_andReachesBackendAttempt() {
-        webTestClient.post().uri("/api/auth/login")
-                .exchange()
-                .expectStatus().value(status -> org.assertj.core.api.Assertions.assertThat(status).isNotEqualTo(401));
-    }
+  @Test
+  void authRoute_isPublic_andReachesBackendAttempt() {
+    webTestClient
+        .post()
+        .uri("/api/auth/login")
+        .exchange()
+        .expectStatus()
+        .value(status -> org.assertj.core.api.Assertions.assertThat(status).isNotEqualTo(401));
+  }
 }

@@ -7,7 +7,8 @@ import { useCart } from '../context/CartContext.jsx'
 import { formatPrice } from '../utils/format'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-const stripePromise = PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('xxx') ? loadStripe(PUBLISHABLE_KEY) : null
+const stripePromise =
+  PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('xxx') ? loadStripe(PUBLISHABLE_KEY) : null
 
 function PaymentForm({ orderNumber, onPaid }) {
   const stripe = useStripe()
@@ -39,7 +40,9 @@ function PaymentForm({ orderNumber, onPaid }) {
 
   return (
     <form onSubmit={onSubmit}>
-      <p className="muted">Porudžbina <strong>{orderNumber}</strong></p>
+      <p className="muted">
+        Porudžbina <strong>{orderNumber}</strong>
+      </p>
       <div className="stripe-box">
         <PaymentElement />
       </div>
@@ -61,31 +64,37 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([])
   const [selectedAddrId, setSelectedAddrId] = useState('')
   const [shipping, setShipping] = useState({
-    shippingStreet: '', shippingCity: '', shippingPostalCode: '', shippingCountry: 'Srbija'
+    shippingStreet: '',
+    shippingCity: '',
+    shippingPostalCode: '',
+    shippingCountry: 'Srbija',
   })
   const [clientSecret, setClientSecret] = useState('')
-  const [orderNumber,  setOrderNumber]  = useState('')
-  const [error,   setError]   = useState('')
+  const [orderNumber, setOrderNumber] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done,    setDone]    = useState(false)
+  const [done, setDone] = useState(false)
 
   useEffect(() => {
-    api.get('/account/addresses').then(r => {
-      const addrs = r.data || []
-      setSavedAddresses(addrs)
-      if (addrs.length > 0) {
-        applyAddress(addrs[0])
-        setSelectedAddrId(String(addrs[0].id))
-      }
-    }).catch(() => {})
+    api
+      .get('/account/addresses')
+      .then((r) => {
+        const addrs = r.data || []
+        setSavedAddresses(addrs)
+        if (addrs.length > 0) {
+          applyAddress(addrs[0])
+          setSelectedAddrId(String(addrs[0].id))
+        }
+      })
+      .catch(() => {})
   }, [])
 
   function applyAddress(a) {
     setShipping({
-      shippingStreet:     a.street,
-      shippingCity:       a.city,
+      shippingStreet: a.street,
+      shippingCity: a.city,
       shippingPostalCode: a.postalCode,
-      shippingCountry:    a.country,
+      shippingCountry: a.country,
     })
   }
 
@@ -93,23 +102,31 @@ export default function CheckoutPage() {
     const id = e.target.value
     setSelectedAddrId(id)
     if (id === '') {
-      setShipping({ shippingStreet: '', shippingCity: '', shippingPostalCode: '', shippingCountry: 'Srbija' })
+      setShipping({
+        shippingStreet: '',
+        shippingCity: '',
+        shippingPostalCode: '',
+        shippingCountry: 'Srbija',
+      })
     } else {
-      const found = savedAddresses.find(a => String(a.id) === id)
+      const found = savedAddresses.find((a) => String(a.id) === id)
       if (found) applyAddress(found)
     }
   }
 
-  const set = field => e => setShipping({ ...shipping, [field]: e.target.value })
+  const set = (field) => (e) => setShipping({ ...shipping, [field]: e.target.value })
 
   async function createOrderAndIntent(e) {
     e.preventDefault()
     setError('')
-    if (items.length === 0) { setError('Korpa je prazna.'); return }
+    if (items.length === 0) {
+      setError('Korpa je prazna.')
+      return
+    }
     setLoading(true)
     try {
       const orderRes = await api.post('/orders', {
-        items: items.map(i => ({ watchId: i.watchId, quantity: i.quantity })),
+        items: items.map((i) => ({ watchId: i.watchId, quantity: i.quantity })),
         ...shipping,
       })
       setOrderNumber(orderRes.data.orderNumber)
@@ -132,9 +149,12 @@ export default function CheckoutPage() {
       <div className="form center">
         <h1 className="page-title">Hvala na kupovini! ✓</h1>
         <div className="alert alert-success">
-          Plaćanje za porudžbinu <strong>{orderNumber}</strong> je uspešno. Potvrda je zabeležena preko Stripe webhook-a.
+          Plaćanje za porudžbinu <strong>{orderNumber}</strong> je uspešno. Potvrda je zabeležena
+          preko Stripe webhook-a.
         </div>
-        <button className="btn btn-primary" onClick={() => navigate('/orders')}>Moje porudžbine</button>
+        <button className="btn btn-primary" onClick={() => navigate('/orders')}>
+          Moje porudžbine
+        </button>
       </div>
     )
   }
@@ -142,8 +162,10 @@ export default function CheckoutPage() {
   return (
     <div>
       <h1 className="page-title">Plaćanje</h1>
-      <div className="grid" style={{ gridTemplateColumns: '1.2fr 1fr', alignItems: 'start', gap: 24 }}>
-
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: '1.2fr 1fr', alignItems: 'start', gap: 24 }}
+      >
         <div className="card" style={{ padding: 22 }}>
           {!clientSecret ? (
             <form onSubmit={createOrderAndIntent}>
@@ -155,7 +177,7 @@ export default function CheckoutPage() {
                 <div className="saved-addr-picker">
                   <p className="saved-addr-title">Sačuvane adrese</p>
                   <div className="saved-addr-list">
-                    {savedAddresses.map(a => (
+                    {savedAddresses.map((a) => (
                       <label
                         key={a.id}
                         className={`saved-addr-item${selectedAddrId === String(a.id) ? ' selected' : ''}`}
@@ -169,7 +191,9 @@ export default function CheckoutPage() {
                         />
                         <div className="saved-addr-info">
                           {a.label && <strong>{a.label}</strong>}
-                          <span>{a.street}, {a.postalCode} {a.city}</span>
+                          <span>
+                            {a.street}, {a.postalCode} {a.city}
+                          </span>
                         </div>
                       </label>
                     ))}
@@ -199,21 +223,41 @@ export default function CheckoutPage() {
                 )}
                 <div className="field">
                   <label>Ulica i broj</label>
-                  <input className="input" required value={shipping.shippingStreet} onChange={set('shippingStreet')} />
+                  <input
+                    className="input"
+                    required
+                    value={shipping.shippingStreet}
+                    onChange={set('shippingStreet')}
+                  />
                 </div>
                 <div className="form-row">
                   <div className="field">
                     <label>Grad</label>
-                    <input className="input" required value={shipping.shippingCity} onChange={set('shippingCity')} />
+                    <input
+                      className="input"
+                      required
+                      value={shipping.shippingCity}
+                      onChange={set('shippingCity')}
+                    />
                   </div>
                   <div className="field">
                     <label>Poštanski broj</label>
-                    <input className="input" required value={shipping.shippingPostalCode} onChange={set('shippingPostalCode')} />
+                    <input
+                      className="input"
+                      required
+                      value={shipping.shippingPostalCode}
+                      onChange={set('shippingPostalCode')}
+                    />
                   </div>
                 </div>
                 <div className="field">
                   <label>Država</label>
-                  <input className="input" required value={shipping.shippingCountry} onChange={set('shippingCountry')} />
+                  <input
+                    className="input"
+                    required
+                    value={shipping.shippingCountry}
+                    onChange={set('shippingCountry')}
+                  />
                 </div>
               </div>
 
@@ -222,22 +266,28 @@ export default function CheckoutPage() {
               </button>
             </form>
           ) : stripePromise ? (
-            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
+            <Elements
+              stripe={stripePromise}
+              options={{ clientSecret, appearance: { theme: 'night' } }}
+            >
               <PaymentForm orderNumber={orderNumber} onPaid={handlePaid} />
             </Elements>
           ) : (
             <div className="alert alert-info">
-              Porudžbina <strong>{orderNumber}</strong> je kreirana, ali Stripe publishable ključ nije podešen
-              (VITE_STRIPE_PUBLISHABLE_KEY). Unesite svoj <code>pk_test_…</code> ključ u <code>.env</code>.
+              Porudžbina <strong>{orderNumber}</strong> je kreirana, ali Stripe publishable ključ
+              nije podešen (VITE_STRIPE_PUBLISHABLE_KEY). Unesite svoj <code>pk_test_…</code> ključ
+              u <code>.env</code>.
             </div>
           )}
         </div>
 
         <div className="summary">
           <h3 style={{ marginTop: 0 }}>Vaša porudžbina</h3>
-          {items.map(i => (
+          {items.map((i) => (
             <div className="summary-row" key={i.watchId}>
-              <span>{i.name} × {i.quantity}</span>
+              <span>
+                {i.name} × {i.quantity}
+              </span>
               <span>{formatPrice(Number(i.price) * i.quantity)}</span>
             </div>
           ))}

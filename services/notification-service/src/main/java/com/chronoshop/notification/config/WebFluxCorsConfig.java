@@ -6,20 +6,21 @@ import org.springframework.web.reactive.config.CorsRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
- * CORS za slucaj direktnog pristupa (lokalni razvoj bez gateway-a) - gateway (PR
- * feat/api-gateway) ima sopstvenu globalnu CORS konfiguraciju za saobracaj kroz njega.
+ * CORS za slucaj direktnog pristupa (lokalni razvoj bez gateway-a) - gateway (PR feat/api-gateway)
+ * ima sopstvenu globalnu CORS konfiguraciju za saobracaj kroz njega.
  */
 @Configuration
 public class WebFluxCorsConfig implements WebFluxConfigurer {
 
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
+  @Value("${app.cors.allowed-origins}")
+  private String allowedOrigins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns(allowedOrigins.split(","))
-                .allowedMethods("GET", "OPTIONS")
-                .allowCredentials(true);
-    }
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry
+        .addMapping("/**")
+        .allowedOriginPatterns(allowedOrigins.split(","))
+        .allowedMethods("GET", "OPTIONS")
+        .allowCredentials(true);
+  }
 }

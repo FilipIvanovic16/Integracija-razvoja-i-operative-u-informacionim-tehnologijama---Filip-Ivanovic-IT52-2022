@@ -12,7 +12,8 @@ export default function AdminOrders() {
   function load() {
     const params = { page, size: 15, sort: 'createdAt,desc' }
     if (status) params.status = status
-    api.get('/admin/orders', { params })
+    api
+      .get('/admin/orders', { params })
       .then((r) => setData(r.data))
       .catch((e) => setError(apiErrorMessage(e)))
   }
@@ -32,10 +33,19 @@ export default function AdminOrders() {
     <div>
       <div className="row-between">
         <h3 style={{ margin: 0 }}>Porudžbine</h3>
-        <select className="select" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0) }}>
+        <select
+          className="select"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setPage(0)
+          }}
+        >
           <option value="">Svi statusi</option>
           {Object.keys(STATUS_LABELS).map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            <option key={s} value={s}>
+              {STATUS_LABELS[s]}
+            </option>
           ))}
         </select>
       </div>
@@ -43,7 +53,14 @@ export default function AdminOrders() {
 
       <table className="table">
         <thead>
-          <tr><th>Broj</th><th>Kupac</th><th>Iznos</th><th>Datum</th><th>Status</th><th>Promeni</th></tr>
+          <tr>
+            <th>Broj</th>
+            <th>Kupac</th>
+            <th>Iznos</th>
+            <th>Datum</th>
+            <th>Status</th>
+            <th>Promeni</th>
+          </tr>
         </thead>
         <tbody>
           {data.content.map((o) => (
@@ -52,11 +69,19 @@ export default function AdminOrders() {
               <td>{o.customerName}</td>
               <td>{formatPrice(o.totalAmount)}</td>
               <td className="muted">{formatDate(o.createdAt)}</td>
-              <td><span className={`pill pill-${o.status}`}>{STATUS_LABELS[o.status]}</span></td>
               <td>
-                <select className="select" value={o.status} onChange={(e) => changeStatus(o.id, e.target.value)}>
+                <span className={`pill pill-${o.status}`}>{STATUS_LABELS[o.status]}</span>
+              </td>
+              <td>
+                <select
+                  className="select"
+                  value={o.status}
+                  onChange={(e) => changeStatus(o.id, e.target.value)}
+                >
                   {Object.keys(STATUS_LABELS).map((s) => (
-                    <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                    <option key={s} value={s}>
+                      {STATUS_LABELS[s]}
+                    </option>
                   ))}
                 </select>
               </td>

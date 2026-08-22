@@ -11,23 +11,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Pregled transakcija u admin panelu — podaci se popunjavaju kroz Stripe webhook.
- */
+/** Pregled transakcija u admin panelu — podaci se popunjavaju kroz Stripe webhook. */
 @RestController
 @RequestMapping("/api/admin/payments")
 public class AdminPaymentController {
 
-    private final PaymentService paymentService;
+  private final PaymentService paymentService;
 
-    public AdminPaymentController(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
+  public AdminPaymentController(PaymentService paymentService) {
+    this.paymentService = paymentService;
+  }
 
-    @GetMapping
-    public PageResponse<PaymentResponse> transactions(
-            @RequestParam(required = false) PaymentStatus status,
-            @PageableDefault(size = 15, sort = "createdAt") Pageable pageable) {
-        return paymentService.listTransactions(status, pageable);
-    }
+  @GetMapping
+  public PageResponse<PaymentResponse> transactions(
+      @RequestParam(required = false) PaymentStatus status,
+      @PageableDefault(size = 15, sort = "createdAt") Pageable pageable) {
+    return paymentService.listTransactions(status, pageable);
+  }
 }

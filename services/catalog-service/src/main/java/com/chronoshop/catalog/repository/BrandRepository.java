@@ -1,17 +1,16 @@
 package com.chronoshop.catalog.repository;
 
 import com.chronoshop.catalog.domain.Brand;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
 public interface BrandRepository extends JpaRepository<Brand, Long> {
 
-    boolean existsByNameIgnoreCase(String name);
+  boolean existsByNameIgnoreCase(String name);
 
-    Optional<Brand> findByNameIgnoreCase(String name);
+  Optional<Brand> findByNameIgnoreCase(String name);
 
-    Page<Brand> findByNameContainingIgnoreCase(String name, Pageable pageable);
+  Page<Brand> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }
